@@ -1,11 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-//import NinjaComponent from './App';
-var ReactRouter = require('react-router');
-var NinjaComponent = require('./App');
+import { Link, Router, Route, hashHistory, IndexRoute } from 'react-router';
 import './index.css';
 
-//var data = require('./data.json');
 var data = [
   {
     "id" : 1,
@@ -29,24 +26,79 @@ var data = [
   }
 ];
 
-var Router = ReactRouter.Router,
-    Route = ReactRouter.Route,
-    hashHistory = ReactRouter.hashHistory;
-
-var App = React.createClass(
+var NinjaList = React.createClass(
 {
   render: function()
   {
-    //console.log(this.props.data);
-
+    var ninjas = this.props.turtles.map(function(turtle, idx){
+      return (
+        <li key={idx}>
+          <Link to={'ninjas/' + turtle.id}>{turtle.name}</Link>
+        </li>
+      )
+    })
     return (
-      <Router history={ hashHistory }>
-        <Route path='/' component={ NinjaComponent } data={ this.props.data }/>
+      <ul>
+        {ninjas}
+      </ul>
+    )
+  }
+});
+
+var NinjaComponent = React.createClass(
+{
+    render: function ()
+    {
+        return (
+          <div>
+            <h1>Greetings Ninja!</h1>
+            <h2>Click on a ninja for more information</h2>
+            <NinjaList turtles={this.props.route.data}/>
+          </div>
+        )
+    }
+});
+
+var NinjaDescription = React.createClass(
+{
+  render: function()
+  {
+    // Here's the route parameter (notice it's a string)
+    var routeID = this.props.params.id;
+    // Let's pass it into the method our Route parent provided and assign the result to a variable
+    var ninja = this.props.route.fetchTurtle(parseInt(routeID));
+
+    return(
+      <div>
+        <h1>{ninja.name}</h1>
+        <p>{ninja.description}</p>
+        <Link to='/ninjas'>Back</Link>
+      </div>
+    )
+  }
+});
+
+var App = React.createClass(
+{
+  fetchTurtle: function(id)
+  {
+    // Filter the array of turtles by the id and return the first element of the resulting array
+    return this.props.data.filter(function(ninja)
+    {
+      return (ninja.id === id)
+    })[0]
+  },
+  render: function()
+  {
+    return (
+      <Router history={hashHistory}>
+        <Route path='/ninjas' >
+          <IndexRoute component={NinjaComponent} data={this.props.data}/>
+          <Route path=':id' component={NinjaDescription} fetchTurtle={this.fetchTurtle}/>
+        </Route>
       </Router>
     )
   }
 });
 
 ReactDOM.render(<App data={data}/>, document.getElementById('root'))
-
-//ReactDOM.render(<NinjaComponent data={data}/>, document.getElementById('root'));
